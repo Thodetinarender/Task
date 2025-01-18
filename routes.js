@@ -1,81 +1,77 @@
-const fs = require("fs")
+const fs = require("fs");
 
-const requestHandler = (req,res)=>{
-    
-    const url=req.url;
-    const method=req.method;
-    if(req.url=='/'){
-        //form
+const requestHandler = (req, res) => {
+    const url = req.url;
+    const method = req.method;
 
-        res.setHeader('Content-Type','text/html')
-
+    if (url == '/') {
+        // Form
         fs.readFile('formValues.txt', (err, data) => {
-            let formData = '';
-            if (!err && data) {
-                formData = `<h1>${data.toString()}</h1>`;
-            }
-            res.end(`
-                ${formData}
+            const fileContent = err ? "No data available yet." : data.toString();
+
+            res.setHeader('Content-Type', 'text/html');
+            res.end(
+                `
+                <p>${fileContent}</p>
                 <form action="/message" method="POST">
                     <label>Name:</label>
                     <input type="text" name="username"></input>
                     <button type="submit">Add</button>
                 </form>
+                `
+            );
+        });
+    } else if (url == '/message') {
+        res.setHeader('content-type', 'text/html');
+        let dataChunks = [];
+        req.on('data', (chunks) => {
+            console.log(chunks);
+            dataChunks.push(chunks);
+        });
+
+        req.on('end', () => {
+            let combinedBuffer = Buffer.concat(dataChunks);
+            console.log(combinedBuffer);
+
+            let value = combinedBuffer.toString().split('=');
+            console.log(value);
+
+            fs.writeFile('formValues.txt', value[1], (err) => {
+                if (err) {
+                    console.error(err);
+                    res.statusCode = 500; // Internal Server Error
+                    res.end("An error occurred");
+                    return;
+                }
+                res.statusCode = 302; // Redirect
+                res.setHeader('Location', '/');
+                res.end(); // Corrected from `res.end;`
+            });
+        });
+    } else if (url == '/read') {
+        // Read from the file
+        fs.readFile('formValues.txt', (err, data) => {
+            if (err) {
+                console.error(err);
+                res.statusCode = 500; // Internal Server Error
+                res.end("An error occurred while reading the file");
+                return;
+            }
+            console.log(data.toString());
+            res.setHeader('Content-Type', 'text/html');
+            res.end(`
+                <h1>${data.toString()}</h1>
             `);
         });
-    }else{
-        if(req.url=='/message'){
-            res.setHeader('content-type','text/html');
-            let dataChuck=[];
-            req.on('data',(chunks)=>{
-                console.log(chunks)
-                dataChuck.push(chunks);
-            })
- 
-            
-            req.on('end',()=>{
-                let buffer = Buffer.concat(dataChuck);
-                console.log(buffer);
-
-                let fromData = buffer.toString();
-                console.log(fromData);
-
-                const formValues = fromData.split('=')[1];
-
-                fs.writeFile('formValues.txt',formValues,(err)=>{
-                    res.statusCode=302;//redirected
-                    res.setHeader('Location','/');
-                    res.end;
-
-                })
-            })
-        }
-        // else{
-        //     if(req.url=='/read'){
-        //         //read from the file
-
-        //         fs.readFile('formValues.txt',(err,data)=>{
-        //             console.log(data.toString());
-        //             res.end(`
-        //                 <h1>${data.toString()}</h1>`);
-        //         })
-        //     }
-        // }
     }
-}
+};
 
-const anotherFunction =()=>{
+const anotherFunction = () => {
     console.log("This is another functions");
-}
+};
 
-// module.exports =requestHandler;
-// module.exports.testFunction=anotherFunction;
-
-module.exports={
-handler:requestHandler,
-testFunction:anotherFunction
-}
-
-
-// module.exports.handler=requestHandler;
-// module.exports.testFunction=anotherFunction;
+// Export the handlers
+module.exports = {
+    handler: requestHandler,
+    testFunction: anotherFunction,
+};

@@ -1,10 +1,19 @@
-const http=require("http")
-const routes = require("./routes");
 
-routes.testFunction();
-const server=http.createServer((routes));
+const express = require('express');
 
-server.listen(3000, ()=>{
+const app = express();
+
+app.use((req, res, next)=>{
+    console.log('In the middleware!');
+    next();//Allows the request to continue the next middleware is line
+});
+
+app.use((req, res, next)=>{
+    console.log('In another middleware!');
+    res.send('<h1> Hello from express! </h1>');
+});
+
+app.listen(3000, ()=>{
     console.log("Server is running on");
 })
  

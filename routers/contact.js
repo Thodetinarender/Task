@@ -1,26 +1,15 @@
-const path = require('path');
-
 const express = require('express');
+const contactController = require('./controllers/contactus');
 
-const rootDir = require('../util/path');
+const router = express.Router();
 
+// Handling GET requests for the contact page
+router.get('/contactus', contactController.getcontact);
 
-const router =express.Router();
+// Handling POST requests when the form is submitted
+router.post('/contact-us', contactController.postcontact);
 
-
-router.get('/contactus',(req, res, next)=>{
-    res.sendFile(path.join(rootDir,'views', 'contactus.html'));
-});
-
-
-router.post('/contact-us',(req,res,next)=>{
-    console.log(req.body);
-    res.redirect('/success');
-})
-
-router.get('/success', (req, res, next) => {
-    res.send('<h1>Form successfully filled</h1>');
-});
-
+// Handling GET requests for the success page
+router.get('/success', contactController.successcontacts);
 
 module.exports = router;

@@ -4,6 +4,8 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const errorController = require('./controllers/404');
+
 const app = express();
 
 const adminRouter = require('./routers/admin');
@@ -16,9 +18,7 @@ app.use('/admin', adminRouter);
 app.use(shopRouter);
 app.use(contactRouter);
 
-app.use((req,res,next)=>{
-    res.status(404).sendFile(path.join(__dirname,'views', '404.html'));
-})
+app.use(errorController.error);
 
 
 app.listen(3000, ()=>{
